@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Sabritas</string>
+    <string name="add">Agregar</string>
+    <string name="delete">Eliminar</string>
+    <string name="brand">Marca</string>
+    <string name="flavor_presentation">Sabor/Presentación</string>
+    <string name="grams">Gramos</string>
+    <string name="existence">Existencia</string>
+    <string name="price_to_the_public">Precio al público</string>
+    <string name="search_by_name">Buscar por nombre…</string>
+    <string name="in_existence">en existencia</string>
+    <string name="without_results">Sin resultados.</string>
+    <string name="are_you_sure_of">Está seguro de</string>
+    <string name="cancel">Cancelar</string>
+    <string name="failed_to_delete_image">Error al eliminar la imagen.</string>
+    <string name="this_field_is_required">Este campo es obligatorio.</string>
+    <string name="failed_to_remove_chips">Error al eliminar la sabrita.</string>
+    <string name="failed_to_query_the_data">Error al consultar los datos.</string>
+    <string name="last_update">Última actualización</string>
+    <string name="add_chips">Agregar sabrita</string>
+    <string name="there_are_still_empty_fields">Aún hay campos vacíos.</string>
+    <string name="update_chips">Actualizar sabrita</string>
+    <string name="chips_updated">Sabrita actualizada.</string>
+    <string name="failed_to_update_chips">Error al actualizar la sabrita.</string>
+    <string name="failed_to_add_chips">Error al agregar la sabrita.</string>
+    <string name="chips_added">Sabrita agregada.</string>
+    <string name="uploading_image">Subiendo imagen…</string>
+    <string name="error_uploading_image">Error al subir la imagen.</string>
+    <string name="unknown">Desconocido</string>
+</resources>

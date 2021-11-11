@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorOnPrimary">@color/white</color>
+    <color name="colorOnSecondary">@color/black</color>
+    <color name="red_700">#d32f2f</color>
+    <color name="red_700_light">#ff6659</color>
+    <color name="red_700_dark">#9a0007</color>
+    <color name="orange_a400">#ff9100</color>
+    <color name="orange_a400_light">#ffc246</color>
+    <color name="orange_a400_dark">#c56200</color>
+    <color name="gray_100">#f5f5f5</color>
+    <color name="gray_50">#fafafa</color>
+    <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
+</resources>

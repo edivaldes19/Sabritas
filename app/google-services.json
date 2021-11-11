@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "677356083165",
+    "project_id": "sabritas-b5f43",
+    "storage_bucket": "sabritas-b5f43.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677356083165:android:3b21aea8307e4ba0fb8834",
+        "android_client_info": {
+          "package_name": "com.manuel.sabritas"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "677356083165-4c62ba0g9s7dkccpn4hkvdi74rukbf2k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.manuel.sabritas",
+            "certificate_hash": "112f8b3ca6da778bf4bfd7529a3ef4cce271af20"
+          }
+        },
+        {
+          "client_id": "677356083165-d5sl04lsvaioubtncgtmifsmt8mvn2rv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXF8VHLJFwRgswk2Vm1Lc2kmipcXSsdWc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "677356083165-d5sl04lsvaioubtncgtmifsmt8mvn2rv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

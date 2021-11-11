@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer-array name="names_key">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+    </integer-array>
+    <string-array name="names_value">
+        <item>Cheetos</item>
+        <item>Churrumais</item>
+        <item>Crujitos</item>
+        <item>Doritos</item>
+        <item>Frit-os</item>
+        <item>Pake-Taxo</item>
+        <item>Rancheritos</item>
+        <item>Ruffles</item>
+        <item>Sabritas</item>
+        <item>Sabritones</item>
+        <item>Tostitos</item>
+    </string-array>
+</resources>
