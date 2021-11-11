@@ -18,7 +18,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/common_padding_min"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -26,8 +25,11 @@
                 android:id="@+id/imgPackage"
                 android:layout_width="@dimen/image_width_and_height"
                 android:layout_height="@dimen/image_width_and_height"
-                android:layout_margin="@dimen/common_padding_min"
+                android:layout_marginStart="@dimen/common_padding_min"
+                android:layout_marginTop="@dimen/common_padding_min"
+                android:layout_marginEnd="@dimen/common_padding_min"
                 android:background="@color/gray_100"
+                android:scaleType="centerCrop"
                 app:shapeAppearance="@style/ImageWithEdgesRoundedInHalf" />
 
             <LinearLayout
@@ -43,42 +45,29 @@
                     android:id="@+id/tvBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/common_padding_min"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                     tools:text="@string/brand" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tvPresentation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/common_padding_min"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                     tools:text="@string/flavor_presentation" />
 
-                <LinearLayout
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvGrams"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/common_padding_min"
-                    android:orientation="horizontal">
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    tools:text="@string/grams" />
 
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/tvGrams"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/common_padding_min"
-                        android:layout_weight="1"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        tools:text="@string/grams" />
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/tvExistence"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/common_padding_min"
-                        android:layout_weight="1"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        tools:text="@string/existence" />
-                </LinearLayout>
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvExistence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    tools:text="@string/existence" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tvPrice"
@@ -102,7 +91,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="@dimen/common_padding_min"
+            android:background="?attr/selectableItemBackground"
             android:text="@string/last_update"
             android:textAlignment="textEnd"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />

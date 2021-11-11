@@ -140,6 +140,7 @@
                 android:layout_width="@dimen/image_width_and_height_preview"
                 android:layout_height="@dimen/image_width_and_height_preview"
                 android:background="@color/gray_100"
+                android:scaleType="centerCrop"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

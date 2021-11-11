@@ -26,6 +26,12 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
     private val snackBar: Snackbar by lazy {
         Snackbar.make(binding.root, "", Snackbar.LENGTH_INDEFINITE)
     }
+    private val aValues: Array<String> by lazy {
+        resources.getStringArray(R.array.names_value)
+    }
+    private val aKeys: Array<Int> by lazy {
+        resources.getIntArray(R.array.names_key).toTypedArray()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_Sabritas)
@@ -55,16 +61,21 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 val temporaryList = mutableListOf<Chips>()
+                var brand = ""
                 for (chips in chipsList) {
-                    if (newText!! in chips.brand.toString()) {
+                    val index = aKeys.indexOf(chips.brand)
+                    if (index != -1) {
+                        brand = aValues[index]
+                    }
+                    if (newText!! in brand) {
                         temporaryList.add(chips)
                     }
                 }
                 chipsAdapter.updateList(temporaryList)
-                if (temporaryList.isNullOrEmpty()) {
-                    binding.tvWithoutResults.visibility = View.VISIBLE
+                binding.tvWithoutResults.visibility = if (temporaryList.isNullOrEmpty()) {
+                    View.VISIBLE
                 } else {
-                    binding.tvWithoutResults.visibility = View.GONE
+                    View.GONE
                 }
                 return false
             }

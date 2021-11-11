@@ -123,7 +123,7 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
                                     save(chips1, eventPost.documentId!!)
                                 } else {
                                     chips?.apply {
-                                        brand = aKeys.indexOf(brand)
+                                        brand = position
                                         flavorPresentation =
                                             view.etFlavorPresentation.text.toString().trim()
                                         grams = view.etGrams.text.toString().trim().toInt()
@@ -167,6 +167,7 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
         chips?.let { chips1 ->
             binding?.let { view ->
                 dialog?.setTitle(getString(R.string.update_chips))
+                position = 0
                 val index = aKeys.indexOf(chips1.brand)
                 if (index != -1) {
                     view.atvBrand.setText(aValues[index], false)
