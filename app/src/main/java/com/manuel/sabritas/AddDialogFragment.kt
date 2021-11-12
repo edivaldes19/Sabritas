@@ -97,7 +97,6 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
         setupButtons()
         val dialog = dialog as? AlertDialog
         dialog?.let { alertDialog ->
-            alertDialog.setCancelable(false)
             alertDialog.setCanceledOnTouchOutside(false)
             chips?.let {
                 fabAdd?.setImageResource(R.drawable.ic_edit)

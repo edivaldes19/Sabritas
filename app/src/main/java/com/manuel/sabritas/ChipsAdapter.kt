@@ -48,7 +48,9 @@ class ChipsAdapter(
             "${chips.existence} ${context.getString(R.string.in_existence)}"
         holder.binding.tvPrice.text =
             "${context.getString(R.string.price_to_the_public)}: $${chips.priceToThePublic} MXN"
-        holder.binding.tvLastUpdate.text = TimestampToText.getTimeAgo(chips.lastUpdate)
+        holder.binding.tvLastUpdate.text = "${context.getString(R.string.last_update)}: ${
+            TimestampToText.getTimeAgo(chips.lastUpdate).lowercase()
+        }"
         Glide.with(context).load(chips.imagePath).diskCacheStrategy(DiskCacheStrategy.ALL)
             .placeholder(R.drawable.ic_cloud_download).error(R.drawable.ic_broken_image)
             .into(holder.binding.imgPackage)

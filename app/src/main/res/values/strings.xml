@@ -24,7 +24,13 @@
     <string name="failed_to_update_chips">Error al actualizar la sabrita.</string>
     <string name="failed_to_add_chips">Error al agregar la sabrita.</string>
     <string name="chips_added">Sabrita agregada.</string>
+    <string name="chips_removed">Sabrita eliminada.</string>
     <string name="uploading_image">Subiendo imagen…</string>
     <string name="error_uploading_image">Error al subir la imagen.</string>
     <string name="unknown">Desconocido</string>
+    <string name="total_items">Elementos totales: </string>
+    <string name="items_found">Elementos encontrados: </string>
+    <string name="no_network_connection">Sin conexión de red.</string>
+    <string name="go_to_settings">Ir a configuración</string>
+    <string name="you_have_connection">Tienes conexión.</string>
 </resources>

@@ -1,11 +1,20 @@
 package com.manuel.sabritas
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.graphics.Color
+import android.net.ConnectivityManager
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Menu
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.DocumentChange
@@ -17,15 +26,13 @@ import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.ktx.storage
 import com.manuel.sabritas.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
+class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
+    ConnectionReceiver.ReceiverListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var chipsAdapter: ChipsAdapter
     private lateinit var listenerRegistration: ListenerRegistration
     private var chipsSelected: Chips? = null
     private var chipsList = mutableListOf<Chips>()
-    private val snackBar: Snackbar by lazy {
-        Snackbar.make(binding.root, "", Snackbar.LENGTH_INDEFINITE)
-    }
     private val aValues: Array<String> by lazy {
         resources.getStringArray(R.array.names_value)
     }
@@ -40,6 +47,7 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
         setContentView(binding.root)
         setupRecyclerView()
         setupButtons()
+        checkInternetConnection()
     }
 
     override fun onResume() {
@@ -60,7 +68,7 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                val temporaryList = mutableListOf<Chips>()
+                val filteredList = mutableListOf<Chips>()
                 var brand = ""
                 for (chips in chipsList) {
                     val index = aKeys.indexOf(chips.brand)
@@ -68,14 +76,19 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
                         brand = aValues[index]
                     }
                     if (newText!! in brand) {
-                        temporaryList.add(chips)
+                        filteredList.add(chips)
                     }
                 }
-                chipsAdapter.updateList(temporaryList)
-                binding.tvWithoutResults.visibility = if (temporaryList.isNullOrEmpty()) {
-                    View.VISIBLE
+                chipsAdapter.updateList(filteredList)
+                if (filteredList.isNullOrEmpty()) {
+                    binding.tvWithoutResults.visibility = View.VISIBLE
+                    binding.tvTotalElements.visibility = View.GONE
                 } else {
-                    View.GONE
+                    binding.tvWithoutResults.visibility = View.GONE
+                    updateTheTotalNumberOfItems(getString(R.string.items_found), filteredList.size)
+                }
+                if (newText.isNullOrEmpty()) {
+                    updateTheTotalNumberOfItems(getString(R.string.total_items), filteredList.size)
                 }
                 return false
             }
@@ -89,8 +102,13 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
     }
 
     override fun onClickInDelete(chips: Chips) {
+        var brand = ""
+        val index = aKeys.indexOf(chips.brand)
+        if (index != -1) {
+            brand = aValues[index]
+        }
         MaterialAlertDialogBuilder(this).setTitle(getString(R.string.delete))
-            .setMessage("¿${getString(R.string.are_you_sure_of)} ${getString(R.string.delete).lowercase()} ${chips.brand} ${chips.flavorPresentation}")
+            .setMessage("¿${getString(R.string.are_you_sure_of)} ${getString(R.string.delete).lowercase()} $brand ${chips.flavorPresentation}")
             .setPositiveButton(getString(R.string.delete)) { _, _ ->
                 chips.id?.let { id ->
                     chips.imagePath?.let { url ->
@@ -101,10 +119,11 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
                                     if ((exception as StorageException).errorCode == StorageException.ERROR_OBJECT_NOT_FOUND) {
                                         deleteChipsInFirestore(id)
                                     } else {
-                                        snackBar.apply {
-                                            setText(getString(R.string.failed_to_delete_image))
-                                            show()
-                                        }
+                                        Snackbar.make(
+                                            binding.root,
+                                            getString(R.string.failed_to_delete_image),
+                                            Snackbar.LENGTH_SHORT
+                                        ).setTextColor(Color.YELLOW).show()
                                     }
                                 }
                         } catch (e: Exception) {
@@ -116,12 +135,26 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
             }.setNegativeButton(getString(R.string.cancel), null).show()
     }
 
-    override fun getChipsSelected(): Chips? = chipsSelected
+    override fun getChipsSelected() = chipsSelected
+    override fun onNetworkChange(isConnected: Boolean) {
+        showNetworkErrorSnackBar(isConnected)
+    }
+
     private fun setupRecyclerView() {
         chipsAdapter = ChipsAdapter(chipsList, this)
         binding.rvList.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = this@MainActivity.chipsAdapter
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    if (dy < 0) {
+                        binding.eFabAdd.show()
+                    } else if (dy > 0) {
+                        binding.eFabAdd.hide()
+                    }
+                }
+            })
         }
     }
 
@@ -135,14 +168,47 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
         }
     }
 
+    private fun checkInternetConnection() {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(Constants.ACTION_INTENT)
+        registerReceiver(ConnectionReceiver(), intentFilter)
+        ConnectionReceiver.receiverListener = this
+        val manager =
+            applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = manager.activeNetworkInfo
+        val isConnected = networkInfo != null && networkInfo.isConnectedOrConnecting
+        showNetworkErrorSnackBar(isConnected)
+    }
+
+    private fun showNetworkErrorSnackBar(isConnected: Boolean) {
+        if (isConnected) {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.you_have_connection),
+                Snackbar.LENGTH_SHORT
+            ).setTextColor(Color.GREEN).show()
+        } else {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.no_network_connection),
+                Snackbar.LENGTH_INDEFINITE
+            ).setTextColor(Color.WHITE)
+                .setAction(getString(R.string.go_to_settings)) { startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) }
+                .show()
+        }
+    }
+
     private fun deleteChipsInFirestore(chipsId: String) {
         val db = Firebase.firestore
         val reference = db.collection(Constants.COLL_CHIPS)
-        reference.document(chipsId).delete().addOnFailureListener {
-            snackBar.apply {
-                setText(getString(R.string.failed_to_remove_chips))
-                show()
-            }
+        reference.document(chipsId).delete().addOnSuccessListener {
+            Toast.makeText(this, getString(R.string.chips_removed), Toast.LENGTH_SHORT).show()
+        }.addOnFailureListener {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.failed_to_remove_chips),
+                Snackbar.LENGTH_SHORT
+            ).setTextColor(Color.YELLOW).show()
         }
     }
 
@@ -152,21 +218,48 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected {
             .orderBy(Constants.PROP_LAST_UPDATE, Query.Direction.DESCENDING)
         listenerRegistration = reference.addSnapshotListener { querySnapshot, error ->
             if (error != null) {
-                snackBar.apply {
-                    setText(getString(R.string.failed_to_query_the_data))
-                    show()
-                }
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.failed_to_query_the_data),
+                    Snackbar.LENGTH_SHORT
+                ).setTextColor(Color.YELLOW).show()
                 return@addSnapshotListener
             }
             for (documentChange in querySnapshot!!.documentChanges) {
                 val chips = documentChange.document.toObject(Chips::class.java)
                 chips.id = documentChange.document.id
                 when (documentChange.type) {
-                    DocumentChange.Type.ADDED -> chipsAdapter.add(chips)
-                    DocumentChange.Type.MODIFIED -> chipsAdapter.update(chips)
-                    DocumentChange.Type.REMOVED -> chipsAdapter.delete(chips)
+                    DocumentChange.Type.ADDED -> {
+                        chipsAdapter.add(chips)
+                        updateTheTotalNumberOfItems(
+                            getString(R.string.total_items),
+                            chipsAdapter.itemCount
+                        )
+                    }
+                    DocumentChange.Type.MODIFIED -> {
+                        chipsAdapter.update(chips)
+                        updateTheTotalNumberOfItems(
+                            getString(R.string.total_items),
+                            chipsAdapter.itemCount
+                        )
+                    }
+                    DocumentChange.Type.REMOVED -> {
+                        chipsAdapter.delete(chips)
+                        updateTheTotalNumberOfItems(
+                            getString(R.string.total_items),
+                            chipsAdapter.itemCount
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateTheTotalNumberOfItems(s: String, size: Int) {
+        binding.tvTotalElements.apply {
+            visibility = View.VISIBLE
+            text = "$s $size"
         }
     }
 }
