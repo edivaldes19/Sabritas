@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer-array name="names_key">
+    <integer-array name="brand_keys">
         <item>0</item>
         <item>1</item>
         <item>2</item>
@@ -13,7 +13,7 @@
         <item>9</item>
         <item>10</item>
     </integer-array>
-    <string-array name="names_value">
+    <string-array name="brand_values">
         <item>Cheetos</item>
         <item>Churrumais</item>
         <item>Crujitos</item>

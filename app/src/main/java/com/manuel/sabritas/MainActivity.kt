@@ -34,10 +34,10 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
     private var chipsSelected: Chips? = null
     private var chipsList = mutableListOf<Chips>()
     private val aValues: Array<String> by lazy {
-        resources.getStringArray(R.array.names_value)
+        resources.getStringArray(R.array.brand_values)
     }
     private val aKeys: Array<Int> by lazy {
-        resources.getIntArray(R.array.names_key).toTypedArray()
+        resources.getIntArray(R.array.brand_keys).toTypedArray()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -181,13 +181,7 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
     }
 
     private fun showNetworkErrorSnackBar(isConnected: Boolean) {
-        if (isConnected) {
-            Snackbar.make(
-                binding.root,
-                getString(R.string.you_have_connection),
-                Snackbar.LENGTH_SHORT
-            ).setTextColor(Color.GREEN).show()
-        } else {
+        if (!isConnected) {
             Snackbar.make(
                 binding.root,
                 getString(R.string.no_network_connection),

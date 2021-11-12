@@ -17,10 +17,10 @@ class ChipsAdapter(
 ) : RecyclerView.Adapter<ChipsAdapter.ViewHolder>() {
     private lateinit var context: Context
     private val aValues: Array<String> by lazy {
-        context.resources.getStringArray(R.array.names_value)
+        context.resources.getStringArray(R.array.brand_values)
     }
     private val aKeys: Array<Int> by lazy {
-        context.resources.getIntArray(R.array.names_key).toTypedArray()
+        context.resources.getIntArray(R.array.brand_keys).toTypedArray()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

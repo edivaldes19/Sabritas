@@ -44,10 +44,10 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
         Snackbar.make(binding!!.root, "", Snackbar.LENGTH_SHORT).setTextColor(Color.YELLOW)
     }
     private val aValues: Array<String> by lazy {
-        resources.getStringArray(R.array.names_value)
+        resources.getStringArray(R.array.brand_values)
     }
     private val aKeys: Array<Int> by lazy {
-        resources.getIntArray(R.array.names_key).toTypedArray()
+        resources.getIntArray(R.array.brand_keys).toTypedArray()
     }
     private val resultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
@@ -166,7 +166,7 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
         chips?.let { chips1 ->
             binding?.let { view ->
                 dialog?.setTitle(getString(R.string.update_chips))
-                position = 0
+                position = chips1.brand
                 val index = aKeys.indexOf(chips1.brand)
                 if (index != -1) {
                     view.atvBrand.setText(aValues[index], false)
@@ -210,9 +210,7 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
         imagePath?.let { path -> eventPost.imagePath = path }
         eventPost.documentId =
             chipsId ?: Firebase.firestore.collection(Constants.COLL_CHIPS).document().id
-        val reference =
-            Firebase.storage.reference.child(eventPost.documentId!!)
-                .child(Constants.PROP_IMAGE_NAME)
+        val reference = Firebase.storage.reference.child(eventPost.documentId!!)
         if (photoSelectedUri == null) {
             eventPost.isSuccess = true
             callback(eventPost)
