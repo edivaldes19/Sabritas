@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
                     if (index != -1) {
                         brand = aValues[index]
                     }
-                    if (newText!! in brand) {
+                    if (newText!!.lowercase() in brand.lowercase()) {
                         filteredList.add(chips)
                     }
                 }
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
             brand = aValues[index]
         }
         MaterialAlertDialogBuilder(this).setTitle(getString(R.string.delete))
-            .setMessage("¿${getString(R.string.are_you_sure_of)} ${getString(R.string.delete).lowercase()} $brand ${chips.flavorPresentation}")
+            .setMessage("¿${getString(R.string.are_you_sure_of)} ${getString(R.string.delete).lowercase()} $brand ${chips.flavorPresentation}?")
             .setPositiveButton(getString(R.string.delete)) { _, _ ->
                 chips.id?.let { id ->
                     chips.imagePath?.let { url ->
