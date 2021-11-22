@@ -215,9 +215,9 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
             eventPost.isSuccess = true
             callback(eventPost)
         } else {
-            binding?.let { binding ->
+            binding?.let { view ->
                 getBitmapFromUri(photoSelectedUri!!)?.let { bitmap ->
-                    binding.progressBar.visibility = View.VISIBLE
+                    view.progressBar.visibility = View.VISIBLE
                     val stream = ByteArrayOutputStream()
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream)
                     reference.putBytes(stream.toByteArray())
@@ -225,8 +225,8 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
                             val progress =
                                 (100 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
                             taskSnapshot.run {
-                                binding.progressBar.progress = progress
-                                binding.tvProgress.text = "${getString(R.string.uploading_image)} ${
+                                view.progressBar.progress = progress
+                                view.tvProgress.text = "${getString(R.string.uploading_image)} ${
                                     String.format(
                                         "%s%%",
                                         progress

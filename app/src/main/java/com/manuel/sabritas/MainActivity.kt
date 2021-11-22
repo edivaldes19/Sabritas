@@ -129,6 +129,7 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
                         } catch (e: Exception) {
                             e.printStackTrace()
                             deleteChipsInFirestore(id)
+
                         }
                     }
                 }
