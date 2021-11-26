@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="LoginTheme" parent="FirebaseUI">
+        <item name="colorPrimary">@color/red_700</item>
+        <item name="colorPrimaryVariant">@color/red_700_dark</item>
+        <item name="colorAccent">@color/orange_a400_dark</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="colorPrimaryDark">@color/red_700_dark</item>
+    </style>
+</resources>

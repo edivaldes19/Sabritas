@@ -9,14 +9,21 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.firebase.ui.auth.AuthMethodPickerLayout
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.ErrorCodes
+import com.firebase.ui.auth.IdpResponse
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
@@ -29,22 +36,61 @@ import com.manuel.sabritas.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
     ConnectionReceiver.ReceiverListener {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var authStateListener: FirebaseAuth.AuthStateListener
     private lateinit var chipsAdapter: ChipsAdapter
-    private lateinit var listenerRegistration: ListenerRegistration
     private var chipsSelected: Chips? = null
     private var chipsList = mutableListOf<Chips>()
+    private var listenerRegistration: ListenerRegistration? = null
     private val aValues: Array<String> by lazy {
         resources.getStringArray(R.array.brand_values)
     }
     private val aKeys: Array<Int> by lazy {
         resources.getIntArray(R.array.brand_keys).toTypedArray()
     }
+    private val authLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
+            val response = IdpResponse.fromResultIntent(activityResult.data)
+            if (activityResult.resultCode == RESULT_OK) {
+                val user = FirebaseAuth.getInstance().currentUser
+                if (user != null) {
+                    Toast.makeText(
+                        this,
+                        "${getString(R.string.welcome)} ${user.displayName}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } else {
+                if (response == null) {
+                    Toast.makeText(this, getString(R.string.see_you_soon), Toast.LENGTH_SHORT)
+                        .show()
+                    finishAffinity()
+                } else {
+                    response.error?.let { exception ->
+                        if (exception.errorCode == ErrorCodes.NO_NETWORK) {
+                            Snackbar.make(
+                                binding.root,
+                                "${getString(R.string.error_code)}: ${exception.errorCode}",
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            Snackbar.make(
+                                binding.root,
+                                getString(R.string.no_network_connection),
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_Sabritas)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupAuth()
         setupRecyclerView()
         setupButtons()
         checkInternetConnection()
@@ -52,12 +98,14 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
 
     override fun onResume() {
         super.onResume()
+        firebaseAuth.addAuthStateListener(authStateListener)
         setupFirestoreInRealtime()
     }
 
     override fun onPause() {
         super.onPause()
-        listenerRegistration.remove()
+        firebaseAuth.removeAuthStateListener(authStateListener)
+        listenerRegistration?.remove()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -96,6 +144,36 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
         return super.onCreateOptionsMenu(menu)
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_sign_out) {
+            MaterialAlertDialogBuilder(this).setTitle(getString(R.string.sign_off))
+                .setMessage(getString(R.string.are_you_sure_to_take_this_action))
+                .setPositiveButton(getString(R.string.sign_off)) { _, _ ->
+                    AuthUI.getInstance().signOut(this).addOnSuccessListener {
+                        Toast.makeText(
+                            this,
+                            getString(R.string.you_have_logged_out),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            binding.tvTotalElements.visibility = View.GONE
+                            binding.rvList.visibility = View.GONE
+                            binding.eFabAdd.hide()
+                            binding.llProgress.visibility = View.VISIBLE
+                        } else {
+                            Snackbar.make(
+                                binding.root,
+                                getString(R.string.failed_to_log_out),
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }.setNegativeButton(getString(R.string.cancel), null).show()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onClick(chips: Chips) {
         chipsSelected = chips
         AddDialogFragment().show(supportFragmentManager, AddDialogFragment::class.java.simpleName)
@@ -129,7 +207,6 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
                         } catch (e: Exception) {
                             e.printStackTrace()
                             deleteChipsInFirestore(id)
-
                         }
                     }
                 }
@@ -137,8 +214,34 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
     }
 
     override fun getChipsSelected() = chipsSelected
-    override fun onNetworkChange(isConnected: Boolean) {
-        showNetworkErrorSnackBar(isConnected)
+    override fun onNetworkChange(isConnected: Boolean) = showNetworkErrorSnackBar(isConnected)
+    private fun setupAuth() {
+        firebaseAuth = FirebaseAuth.getInstance()
+        authStateListener = FirebaseAuth.AuthStateListener { auth ->
+            if (auth.currentUser != null) {
+                supportActionBar?.title = auth.currentUser?.displayName
+                binding.tvTotalElements.visibility = View.VISIBLE
+                binding.rvList.visibility = View.VISIBLE
+                binding.eFabAdd.show()
+                binding.llProgress.visibility = View.GONE
+            } else {
+                val providers = arrayListOf(
+                    AuthUI.IdpConfig.EmailBuilder().build(),
+                    AuthUI.IdpConfig.GoogleBuilder().build()
+                )
+                val loginView = AuthMethodPickerLayout.Builder(R.layout.view_login)
+                    .setEmailButtonId(R.id.btnEmail).setGoogleButtonId(R.id.btnGoogle)
+                    .setTosAndPrivacyPolicyId(R.id.tvTermsAndConditions).build()
+                authLauncher.launch(
+                    AuthUI.getInstance().createSignInIntentBuilder()
+                        .setAvailableProviders(providers).setIsSmartLockEnabled(false)
+                        .setTosAndPrivacyPolicyUrls(
+                            Constants.TERMS_AND_CONDITIONS,
+                            Constants.PRIVACY_POLICY
+                        ).setAuthMethodPickerLayout(loginView).setTheme(R.style.LoginTheme).build()
+                )
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -208,42 +311,45 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
     }
 
     private fun setupFirestoreInRealtime() {
-        val db = Firebase.firestore
-        val reference = db.collection(Constants.COLL_CHIPS)
-            .orderBy(Constants.PROP_LAST_UPDATE, Query.Direction.DESCENDING)
-        listenerRegistration = reference.addSnapshotListener { querySnapshot, error ->
-            if (error != null) {
-                Snackbar.make(
-                    binding.root,
-                    getString(R.string.failed_to_query_the_data),
-                    Snackbar.LENGTH_SHORT
-                ).setTextColor(Color.YELLOW).show()
-                return@addSnapshotListener
-            }
-            for (documentChange in querySnapshot!!.documentChanges) {
-                val chips = documentChange.document.toObject(Chips::class.java)
-                chips.id = documentChange.document.id
-                when (documentChange.type) {
-                    DocumentChange.Type.ADDED -> {
-                        chipsAdapter.add(chips)
-                        updateTheTotalNumberOfItems(
-                            getString(R.string.total_items),
-                            chipsAdapter.itemCount
-                        )
-                    }
-                    DocumentChange.Type.MODIFIED -> {
-                        chipsAdapter.update(chips)
-                        updateTheTotalNumberOfItems(
-                            getString(R.string.total_items),
-                            chipsAdapter.itemCount
-                        )
-                    }
-                    DocumentChange.Type.REMOVED -> {
-                        chipsAdapter.delete(chips)
-                        updateTheTotalNumberOfItems(
-                            getString(R.string.total_items),
-                            chipsAdapter.itemCount
-                        )
+        FirebaseAuth.getInstance().currentUser?.let { provider ->
+            val db = Firebase.firestore
+            val reference = db.collection(Constants.COLL_CHIPS)
+                .whereEqualTo(Constants.PROP_PROVIDER_ID, provider.uid)
+                .orderBy(Constants.PROP_LAST_UPDATE, Query.Direction.DESCENDING)
+            listenerRegistration = reference.addSnapshotListener { querySnapshot, error ->
+                if (error != null) {
+                    Snackbar.make(
+                        binding.root,
+                        getString(R.string.failed_to_query_the_data),
+                        Snackbar.LENGTH_SHORT
+                    ).setTextColor(Color.YELLOW).show()
+                    return@addSnapshotListener
+                }
+                for (documentChange in querySnapshot!!.documentChanges) {
+                    val chips = documentChange.document.toObject(Chips::class.java)
+                    chips.id = documentChange.document.id
+                    when (documentChange.type) {
+                        DocumentChange.Type.ADDED -> {
+                            chipsAdapter.add(chips)
+                            updateTheTotalNumberOfItems(
+                                getString(R.string.total_items),
+                                chipsAdapter.itemCount
+                            )
+                        }
+                        DocumentChange.Type.MODIFIED -> {
+                            chipsAdapter.update(chips)
+                            updateTheTotalNumberOfItems(
+                                getString(R.string.total_items),
+                                chipsAdapter.itemCount
+                            )
+                        }
+                        DocumentChange.Type.REMOVED -> {
+                            chipsAdapter.delete(chips)
+                            updateTheTotalNumberOfItems(
+                                getString(R.string.total_items),
+                                chipsAdapter.itemCount
+                            )
+                        }
                     }
                 }
             }
@@ -251,10 +357,10 @@ class MainActivity : AppCompatActivity(), OnChipsListener, OnChipsSelected,
     }
 
     @SuppressLint("SetTextI18n")
-    private fun updateTheTotalNumberOfItems(s: String, size: Int) {
+    private fun updateTheTotalNumberOfItems(tag: String, size: Int) {
         binding.tvTotalElements.apply {
             visibility = View.VISIBLE
-            text = "$s $size"
+            text = "$tag $size"
         }
     }
 }

@@ -25,6 +25,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -117,7 +118,8 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
                                         priceToThePublic = view.etPrice.text.toString().trim()
                                             .toDouble(),
                                         lastUpdate = Date().time,
-                                        imagePath = eventPost.imagePath
+                                        imagePath = eventPost.imagePath,
+                                        providerId = eventPost.providerId
                                     )
                                     save(chips1, eventPost.documentId!!)
                                 } else {
@@ -190,14 +192,11 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
     private fun setupButtons() {
         binding?.let { view ->
             view.imgChips.setOnClickListener {
-                openGallery()
+                val intent =
+                    Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                resultLauncher.launch(intent)
             }
         }
-    }
-
-    private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        resultLauncher.launch(intent)
     }
 
     @SuppressLint("SetTextI18n")
@@ -210,44 +209,48 @@ class AddDialogFragment : DialogFragment(), DialogInterface.OnShowListener,
         imagePath?.let { path -> eventPost.imagePath = path }
         eventPost.documentId =
             chipsId ?: Firebase.firestore.collection(Constants.COLL_CHIPS).document().id
-        val reference = Firebase.storage.reference.child(eventPost.documentId!!)
-        if (photoSelectedUri == null) {
-            eventPost.isSuccess = true
-            callback(eventPost)
-        } else {
-            binding?.let { view ->
-                getBitmapFromUri(photoSelectedUri!!)?.let { bitmap ->
-                    view.progressBar.visibility = View.VISIBLE
-                    val stream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-                    reference.putBytes(stream.toByteArray())
-                        .addOnProgressListener { taskSnapshot ->
-                            val progress =
-                                (100 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
-                            taskSnapshot.run {
-                                view.progressBar.progress = progress
-                                view.tvProgress.text = "${getString(R.string.uploading_image)} ${
-                                    String.format(
-                                        "%s%%",
-                                        progress
-                                    )
-                                }"
-                            }
-                        }.addOnSuccessListener { taskSnapshot ->
-                            taskSnapshot.storage.downloadUrl.addOnSuccessListener { downloadUrl ->
-                                eventPost.isSuccess = true
-                                eventPost.imagePath = downloadUrl.toString()
+        FirebaseAuth.getInstance().currentUser?.let { user ->
+            val reference = Firebase.storage.reference.child(eventPost.documentId!!)
+            eventPost.providerId = user.uid
+            if (photoSelectedUri == null) {
+                eventPost.isSuccess = true
+                callback(eventPost)
+            } else {
+                binding?.let { view ->
+                    getBitmapFromUri(photoSelectedUri!!)?.let { bitmap ->
+                        view.progressBar.visibility = View.VISIBLE
+                        val stream = ByteArrayOutputStream()
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream)
+                        reference.putBytes(stream.toByteArray())
+                            .addOnProgressListener { taskSnapshot ->
+                                val progress =
+                                    (100 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
+                                taskSnapshot.run {
+                                    view.progressBar.progress = progress
+                                    view.tvProgress.text =
+                                        "${getString(R.string.uploading_image)} ${
+                                            String.format(
+                                                "%s%%",
+                                                progress
+                                            )
+                                        }"
+                                }
+                            }.addOnSuccessListener { taskSnapshot ->
+                                taskSnapshot.storage.downloadUrl.addOnSuccessListener { downloadUrl ->
+                                    eventPost.isSuccess = true
+                                    eventPost.imagePath = downloadUrl.toString()
+                                    callback(eventPost)
+                                }
+                            }.addOnFailureListener {
+                                snackBar.apply {
+                                    setText(getString(R.string.error_uploading_image))
+                                    show()
+                                }
+                                enableAllInterface(true)
+                                eventPost.isSuccess = false
                                 callback(eventPost)
                             }
-                        }.addOnFailureListener {
-                            snackBar.apply {
-                                setText(getString(R.string.error_uploading_image))
-                                show()
-                            }
-                            enableAllInterface(true)
-                            eventPost.isSuccess = false
-                            callback(eventPost)
-                        }
+                    }
                 }
             }
         }

@@ -10,7 +10,8 @@ data class Chips(
     var existence: Int = 0,
     var priceToThePublic: Double = 0.0,
     var lastUpdate: Long = 0,
-    var imagePath: String? = null
+    var imagePath: String? = null,
+    var providerId: String = ""
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

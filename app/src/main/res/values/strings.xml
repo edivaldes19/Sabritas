@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Sabritas</string>
     <string name="add">Agregar</string>
     <string name="delete">Eliminar</string>
@@ -33,4 +33,16 @@
     <string name="no_network_connection">Sin conexión de red.</string>
     <string name="go_to_settings">Ir a configuración</string>
     <string name="you_have_connection">Tienes conexión.</string>
+    <string name="we_welcome_you_to_chips">Te damos la bienvenida a Sabritas</string>
+    <string name="login_email">Correo electrónico</string>
+    <string name="login_google">Acceder con Google</string>
+    <string name="you_do_not_have_an_account">¿No tienes cuenta?… Selecciona un método de autenticación para crear una.</string>
+    <string name="wait_a_moment" tools:ignore="Typos">Espere un momento…</string>
+    <string name="welcome">Bienvenido a Sabritas</string>
+    <string name="see_you_soon">Nos vemos pronto.</string>
+    <string name="error_code">Código de error</string>
+    <string name="sign_off">Cerrar sesión</string>
+    <string name="you_have_logged_out">Has cerrado sesión.</string>
+    <string name="are_you_sure_to_take_this_action">¿Está seguro de realizar esta acción?</string>
+    <string name="failed_to_log_out">Error al cerrar sesión.</string>
 </resources>

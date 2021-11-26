@@ -31,9 +31,9 @@ class ChipsAdapter(
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val chips = chipsList[position]
         holder.binding.root.animation =
             AnimationUtils.loadAnimation(context, R.anim.fade_transition)
-        val chips = chipsList[position]
         holder.setListener(chips)
         val index = aKeys.indexOf(chips.brand)
         if (index != -1) {
